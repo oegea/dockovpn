@@ -3,17 +3,17 @@ FROM alpine:3.22.2
 LABEL maintainer="Oriol Egea <imoriol@duck.com>"
 
 # System settings. User normally shouldn't change these parameters
-ENV APP_NAME Dockovpn
-ENV APP_INSTALL_PATH /opt/${APP_NAME}
-ENV APP_PERSIST_DIR /opt/${APP_NAME}_data
+ENV APP_NAME=Dockovpn
+ENV APP_INSTALL_PATH=/opt/${APP_NAME}
+ENV APP_PERSIST_DIR=/opt/${APP_NAME}_data
 
 # Configuration settings with default values
-ENV NET_ADAPTER eth0
-ENV HOST_ADDR ""
-ENV HOST_TUN_PORT 1194
-ENV HOST_CONF_PORT 80
-ENV HOST_TUN_PROTOCOL udp
-ENV CRL_DAYS 3650
+ENV NET_ADAPTER=eth0
+ENV HOST_ADDR=""
+ENV HOST_TUN_PORT=1194
+ENV HOST_CONF_PORT=80
+ENV HOST_TUN_PROTOCOL=udp
+ENV CRL_DAYS=3650
 
 WORKDIR ${APP_INSTALL_PATH}
 
