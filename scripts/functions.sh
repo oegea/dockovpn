@@ -209,7 +209,33 @@ function generateClientConfig() {
     echo "$(datef) Config http server has been shut down"
 }
 
-RESOLVED_HOST_ADDR=$(curl -s -H "X-DockoVPN-Version: $(getVersion) $0" https://ip.dockovpn.io)
+function resolvePublicIP() {
+    # Privacy-focused IP resolution with fallback
+    # Try multiple services in order for better reliability
+    local resolved_ip=""
+
+    # Try Cloudflare's icanhazip.com first (privacy-focused, no tracking)
+    resolved_ip=$(curl -s --max-time 5 https://icanhazip.com 2>/dev/null | tr -d '[:space:]')
+
+    if [[ -n "$resolved_ip" && "$resolved_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "$resolved_ip"
+        return 0
+    fi
+
+    # Fallback to AWS checkip service
+    resolved_ip=$(curl -s --max-time 5 https://checkip.amazonaws.com 2>/dev/null | tr -d '[:space:]')
+
+    if [[ -n "$resolved_ip" && "$resolved_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "$resolved_ip"
+        return 0
+    fi
+
+    # If both failed, return empty
+    echo ""
+    return 1
+}
+
+RESOLVED_HOST_ADDR=$(resolvePublicIP)
 
 if [[ -n $HOST_ADDR ]]; then
     export HOST_ADDR_INT=$HOST_ADDR

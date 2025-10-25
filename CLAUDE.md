@@ -130,7 +130,7 @@ Client configs embed all certificates inline within the `.ovpn` file for portabi
 Configured via Docker `-e` flags:
 
 - `NET_ADAPTER` - Host network adapter (default: `eth0`)
-- `HOST_ADDR` - Host address override (auto-resolved via ip.dockovpn.io if unset)
+- `HOST_ADDR` - Host address override (auto-resolved via privacy-focused services if unset)
 - `HOST_TUN_PORT` - VPN tunnel port advertised to clients (default: `1194`)
 - `HOST_TUN_PROTOCOL` - Tunnel protocol `udp` or `tcp` (default: `udp`)
 - `HOST_CONF_PORT` - HTTP port for client config download (default: `80`)
@@ -176,6 +176,6 @@ Docker tags follow specific conventions:
 - The project uses Alpine Linux 3.14.1 as the base image
 - OpenVPN and easy-rsa are core dependencies
 - The container requires `--cap-add=NET_ADMIN` capability for TUN device creation and iptables management
-- Host address resolution makes external API call to `https://ip.dockovpn.io` with version header
+- Host address resolution uses privacy-focused services with fallback: tries Cloudflare's icanhazip.com first, then AWS checkip.amazonaws.com if needed
 - HTTP config server (port 8080 internal) shuts down automatically after first client config download
 - Container uses `dumb-init` as PID 1 to handle signals properly
