@@ -5,7 +5,7 @@
 
 > **Note:** This is a maintained fork of the [original dockovpn project](https://github.com/dockovpn/dockovpn) by [alekslitvinenk](https://github.com/alekslitvinenk), created to keep the software secure and up-to-date with the latest dependencies and security patches.
 >
-> **⚠️ Important:** The original project may be outdated and should be used with caution unless updated. This fork includes important privacy improvements, including modifications to prevent potential collection of public IP addresses of servers running the software.
+> **⚠️ Important:** The original project may be outdated and should be used with caution unless updated. This fork takes a different architectural approach to IP detection, using established infrastructure providers (Cloudflare, AWS) rather than a dedicated service. This is a preventive privacy measure reflecting the maintainer's personal comfort level—not a criticism of the original implementation. See our [Privacy Policy](https://github.com/oegea/dockovpn/blob/master/PRIVACY_POLICY.md) for details.
 
 Out of the box stateless VPN server docker image which starts in just a few seconds and doesn't require persistent storage. To get it running,  just copy & paste the snippet below and follow instructions in your terminal:
 

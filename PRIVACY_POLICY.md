@@ -8,16 +8,20 @@ This is a community-maintained fork of the original DockOvpn project. The fork i
 
 We do not collect any personally identifiable information. We do not sell any data to advertisers or third parties.
 
-### Privacy Improvements
+### Architectural Approach to Privacy
 
-One of the key motivations behind creating this fork was to enhance privacy by eliminating any potential collection of server IP addresses. While the original project's authors used a proprietary IP detection service with benevolent intentions (to avoid relying on third-party services that might collect data), this approach required users to trust that server IP addresses were not being logged or stored.
+This fork takes a different architectural approach to IP address detection. Instead of using a dedicated service, it relies on privacy-focused IP detection services from large-scale infrastructure providers such as Cloudflare and AWS.
 
-This fork has been modified to use privacy-focused IP detection services from reputable providers such as Cloudflare and AWS. These services offer several privacy advantages:
+**Important clarification**: This is not a criticism of the original project or its authors. It's simply a different design philosophy that the fork maintainer feels more comfortable with as a preventive measure. Both approaches have their merits.
 
-- **Anonymity through scale**: Even if these providers maintain access logs, your server's IP address will be aggregated among millions of other users making similar requests across countless use cases
-- **Context obscurity**: These large-scale providers cannot determine why an IP address is being detected, making it impossible to build a database specifically of servers running this VPN software
-- **Industry reputation**: Both Cloudflare and AWS have established privacy policies and reputations to maintain
+The rationale behind this architectural choice:
 
-By leveraging these widely-used infrastructure services, we eliminate the need to trust any single individual or small project with potentially sensitive information about your server deployment.
+- **Anonymity through scale**: These providers handle millions of requests daily across countless use cases, making individual server IP addresses indistinguishable in aggregate logs
+- **Context obscurity**: Large-scale infrastructure providers cannot determine the specific purpose of IP detection requests, preventing the possibility of building targeted databases
+- **Established privacy policies**: These providers have publicly documented privacy commitments and reputations to maintain
 
-We believe transparency and privacy by design are fundamental principles, especially for security-focused software like VPN servers. 
+This approach reflects a personal preference for distributing trust across established infrastructure providers rather than relying on any single service. It's a defensive design decision, not an indication of any actual privacy concerns with the original implementation.
+
+While we appreciate the good intentions behind creating a dedicated IP detection service that claims not to store logs, the inherent challenge is that only the service operators can truly verify this claim. This is not an accusation that logging has occurred—it's simply an acknowledgment that verification requires trust. The fork maintainer feels more comfortable using well-established infrastructure providers where the service purpose is general rather than VPN-specific. For details on the services used, see our implementation in the [codebase](https://github.com/oegea/dockovpn/blob/master/scripts/start.sh).
+
+We believe transparency about these architectural decisions is important for security-focused software like VPN servers. 
