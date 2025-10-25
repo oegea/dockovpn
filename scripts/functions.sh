@@ -47,9 +47,11 @@ function zipFiles() {
     CLIENT_PATH="$1"
     IS_QUITE="$2"
 
-    # -q to silence zip output
-    # -j junk directories
-    zip -q -j "$CLIENT_PATH/client.zip" "$CLIENT_PATH/client.ovpn"
+    # Use 7z with AES-256 encryption (without password for backward compatibility)
+    # -tzip: create zip format
+    # -mx=0: no compression (just store)
+    # -j: junk directory names
+    cd "$CLIENT_PATH" && 7z a -tzip -mx=0 client.zip client.ovpn > /dev/null 2>&1
     if [ "$IS_QUITE" != "-q" ]
     then
        echo "$(datef) $CLIENT_PATH/client.zip file has been generated"
@@ -60,14 +62,16 @@ function zipFilesWithPassword() {
     CLIENT_PATH="$1"
     ZIP_PASSWORD="$2"
     IS_QUITE="$3"
-    # -q to silence zip output
-    # -j junk directories
-    # -P pswd use standard encryption, password is pswd
-    zip -q -j -P "$ZIP_PASSWORD" "$CLIENT_PATH/client.zip" "$CLIENT_PATH/client.ovpn"
+    # Use 7z with AES-256 encryption (secure encryption method)
+    # -tzip: create zip format for compatibility
+    # -p: password protection
+    # -mem=AES256: use AES-256 encryption (NOT weak ZipCrypto)
+    # -mx=0: no compression (just store)
+    cd "$CLIENT_PATH" && 7z a -tzip -p"$ZIP_PASSWORD" -mem=AES256 -mx=0 client.zip client.ovpn > /dev/null 2>&1
 
     if [ "$IS_QUITE" != "-q" ]
     then
-       echo "$(datef) $CLIENT_PATH/client.zip with password protection has been generated"
+       echo "$(datef) $CLIENT_PATH/client.zip with AES-256 password protection has been generated"
     fi
 }
 

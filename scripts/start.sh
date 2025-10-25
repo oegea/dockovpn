@@ -78,8 +78,8 @@ if [ ! -f $LOCKFILE ]; then
     test -d pki || REGENERATE="1"
     if [[ -n $REGENERATE ]]; then
         easyrsa --batch init-pki
-        easyrsa --batch gen-dh
-        # DH parameters of size 2048 created at /usr/share/easy-rsa/pki/dh.pem
+        EASYRSA_KEY_SIZE=4096 easyrsa --batch gen-dh
+        # DH parameters of size 4096 created at /usr/share/easy-rsa/pki/dh.pem
         # Copy DH file
         cp pki/dh.pem /etc/openvpn
     fi

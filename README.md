@@ -1,38 +1,27 @@
-<p align=center><img src="https://alekslitvinenk.github.io/docker-openvpn/assets/img/logo-s.png"></p><br>
-
-<p align="center">
-<a href="https://github.com/alekslitvinenk/docker-openvpn/blob/master/README.md">[English]</a>
-<a href="https://github.com/alekslitvinenk/docker-openvpn/blob/master/docs/README_RU.md">[Русский]</a>
-<a href="https://github.com/alekslitvinenk/docker-openvpn/blob/master/docs/README_CN.md">[中国人]</a>
-<br>
-
-![Build Version](http://cicd.dockovpn.io/version/dockovpn)
-![Build Status](http://cicd.dockovpn.io/build/dockovpn)
-[![Tests Status](http://cicd.dockovpn.io/tests/dockovpn)](https://cicd.dockovpn.io/reports/dockovpn)
-![Build Time](http://cicd.dockovpn.io/built/dockovpn)
-[![Docker Pulls](https://img.shields.io/docker/pulls/alekslitvinenk/openvpn.svg)](https://hub.docker.com/r/alekslitvinenk/openvpn/)
-[![Gitter chat](https://img.shields.io/badge/chat-on_gitter-50b6bb.svg)](https://gitter.im/docker-openvpn/community)
-![GitHub](https://img.shields.io/github/license/dockovpn/dockovpn)
-
 # 🔐DockOvpn
-<p align=center><a href="https://techround.co.uk/vpns/11-dockovpn-solutions/" target="_blank"><img src="https://alekslitvinenk.github.io/docker-openvpn/assets/img/VPN53-Badge-300x300.png"  width="198" height="198"></a></p><br>
+
+[![Docker Pulls](https://img.shields.io/docker/pulls/oriolegea/dockovpn.svg)](https://hub.docker.com/r/oriolegea/dockovpn/)
+![GitHub](https://img.shields.io/github/license/oegea/dockovpn)
+
+> **Note:** This is a maintained fork of the [original dockovpn project](https://github.com/dockovpn/dockovpn) by [alekslitvinenk](https://github.com/alekslitvinenk), created to keep the software secure and up-to-date with the latest dependencies and security patches.
+>
+> **⚠️ Important:** The original project may be outdated and should be used with caution unless updated. This fork includes important privacy improvements, including modifications to prevent potential collection of public IP addresses of servers running the software.
 
 Out of the box stateless VPN server docker image which starts in just a few seconds and doesn't require persistent storage. To get it running,  just copy & paste the snippet below and follow instructions in your terminal:
 
 ```bash
 docker run -it --rm --cap-add=NET_ADMIN \
 -p 1194:1194/udp -p 80:8080/tcp \
---name dockovpn alekslitvinenk/openvpn
+--name dockovpn oriolegea/dockovpn
 ```
 
 To get more detailed information, go to [Quick Start](#-quick-start) tutorial or watch [video](https://youtu.be/y5Dwakc6hMs).
 
-## Supporting Dockovpn
+## Contributing
 
-Dockovpn is a team of cybersecurity experts developing leading edge projects in Networking, VPN, DevOPS and SecOPS domains. Project is supported entirely by volonteers.
-If you'd like to help support the future of the project, please consider:
-- Giving developer time (see [Contrubition Guidelines](https://github.com/alekslitvinenk/docker-openvpn/blob/master/CONTRIBUTING.md))!
-- Giving funds by becoming a sponsor on [GitHub](https://github.com/sponsors/dockovpn) or [OpenCollective](https://opencollective.com/dockovpn)!
+This is a community-maintained fork focused on security and keeping dependencies up-to-date. If you'd like to contribute:
+- Submit pull requests with improvements or security fixes
+- Report issues on [GitHub](https://github.com/oegea/dockovpn/issues)
 
 ## Content
 
@@ -46,30 +35,12 @@ If you'd like to help support the future of the project, please consider:
 
 ## Resources
 
-### Real-time Chat
-[Slack](https://dockovpn.slack.com) ([registration](https://join.slack.com/t/dockovpn/shared_invite/zt-200sz4vdi-w2qCtjlN7YIu~ZQPfph_Ow))
-
-### Website
-
-<https://dockovpn.io>
-
-### Social media
-
 | Name | URL |
 | :--: | :-----: |
-| LinkedIn | <https://www.linkedin.com/company/dockovpn> |
-| Facebook | <https://www.facebook.com/dockovpn> |
-
-### Repos
-
-| Name | URL |
-| :--: | :-----: |
-| GitHub | <https://github.com/dockovpn/dockovpn> |
-| Docker Hub | <https://hub.docker.com/r/alekslitvinenk/openvpn> |
+| GitHub | <https://github.com/oegea/dockovpn> |
+| Docker Hub | <https://hub.docker.com/r/oriolegea/dockovpn> |
 
 ## Container properties
-
-<p align=center><a href="https://dockovpn.io" target="_blank"><img src="https://alekslitvinenk.github.io/docker-openvpn/assets/img/container.svg"  width="150" height="110"></a></p>
 
 ### Docker Tags
 
@@ -104,7 +75,7 @@ docker run -it --rm --cap-add=NET_ADMIN \
 -e HOST_CONF_PORT="$DOCKOVPN_CONFIG_PORT" \
 -e HOST_TUN_PORT="$DOCKOVPN_TUNNEL_PORT" \
 -e HOST_TUN_PROTOCOL="$DOCKOVPN_TUNNEL_PROTOCOL" \
---name dockovpn alekslitvinenk/openvpn
+--name dockovpn oriolegea/dockovpn
 ```
 
 ### Container options
@@ -121,7 +92,7 @@ docker run -it --rm --cap-add=NET_ADMIN \
 ```bash
 docker run -it --rm --cap-add=NET_ADMIN \
 -p 1194:1194/udp -p 80:8080/tcp \
---name dockovpn alekslitvinenk/openvpn -r
+--name dockovpn oriolegea/dockovpn -r
 ```
 
 ### Container commands
@@ -140,7 +111,7 @@ After container was run using `docker run` command, it's possible to execute add
 
 ## 📺 Video Guide
 
-<p align=center><a href="https://youtu.be/y5Dwakc6hMs"><img src="https://alekslitvinenk.github.io/docker-openvpn/assets/img/video-cover-play.png"></a></p><br>
+[Watch the video guide on YouTube](https://youtu.be/y5Dwakc6hMs)
 
 ## 🚀 Quick Start
 
@@ -152,12 +123,12 @@ After container was run using `docker run` command, it's possible to execute add
 
 ### 1. Run dockovpn
 
-Copy & paste the following command to run docker-openvpn:<br>
+Copy & paste the following command to run dockovpn:<br>
 
 ```bash
 docker run -it --rm --cap-add=NET_ADMIN \
 -p 1194:1194/udp -p 80:8080/tcp \
---name dockovpn alekslitvinenk/openvpn
+--name dockovpn oriolegea/dockovpn
 ```
 
 **⚠️ Note:** This snippet runs Dockovpn in attached mode, which means if you close your terminal window, container will be stopped.
@@ -183,7 +154,7 @@ Sun Jun  9 09:01:15 2019 Config http server has been shut down
 
 Import `client.ovpn` into your favourite openvpn client. In most cases it should be enough to just doubleclick or tap on that file.
 
-### 3. Connect to your docker-openvpn container
+### 3. Connect to your dockovpn container
 
 You should be able to see your newly added client configuration in the list of available configurations. Click on it, connection process should initiate and be established within few seconds.
 
@@ -212,8 +183,8 @@ After run this command you can find your `client.ovpn` inside `openvpn_conf` fol
 
 ## Other resources
 
-[Privacy Policy](https://github.com/alekslitvinenk/docker-openvpn/blob/master/PRIVACY_POLICY.md) \
-[Contrubition Guidelines](https://github.com/alekslitvinenk/docker-openvpn/blob/master/CONTRIBUTING.md) \
-[Code Of Conduct](https://github.com/alekslitvinenk/docker-openvpn/blob/master/CODE_OF_CONDUCT.md) \
-[Release Guideline](https://github.com/alekslitvinenk/docker-openvpn/blob/master/docs/RELEASE_GUIDELINE.md) \
-[License Agreement](https://github.com/alekslitvinenk/docker-openvpn/blob/master/LICENSE)
+[Privacy Policy](https://github.com/oegea/dockovpn/blob/master/PRIVACY_POLICY.md) \
+[Contributing Guidelines](https://github.com/oegea/dockovpn/blob/master/CONTRIBUTING.md) \
+[Code Of Conduct](https://github.com/oegea/dockovpn/blob/master/CODE_OF_CONDUCT.md) \
+[Release Guideline](https://github.com/oegea/dockovpn/blob/master/docs/RELEASE_GUIDELINE.md) \
+[License Agreement](https://github.com/oegea/dockovpn/blob/master/LICENSE)

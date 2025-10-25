@@ -34,18 +34,6 @@ make build-branch
 make publish-branch
 ```
 
-### Testing
-
-```bash
-# Run full integration test suite
-# Uses alekslitvinenk/dockovpn-it:1.1.0 testing container
-# Test reports saved to ./target/test-reports (configurable via TESTS_REPORT env var)
-make test
-
-# Run tests for branch builds (for macOS/Windows with Docker Desktop)
-make test-branch
-```
-
 ### Running
 
 ```bash
