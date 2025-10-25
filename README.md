@@ -1,7 +1,7 @@
 # 🔐DockOvpn
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/oriolegea/dockovpn.svg)](https://hub.docker.com/r/oriolegea/dockovpn/)
 ![GitHub](https://img.shields.io/github/license/oegea/dockovpn)
+[![Docker Pulls](https://img.shields.io/docker/pulls/oriolegea/dockovpn.svg)](https://hub.docker.com/r/oriolegea/dockovpn/)
 
 > **Note:** This is a maintained fork of the [original dockovpn project](https://github.com/dockovpn/dockovpn) by [alekslitvinenk](https://github.com/alekslitvinenk), created to keep the software secure and up-to-date with the latest dependencies and security patches.
 >
