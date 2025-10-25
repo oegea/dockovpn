@@ -15,7 +15,7 @@ docker run -it --rm --cap-add=NET_ADMIN \
 --name dockovpn oriolegea/dockovpn
 ```
 
-To get more detailed information, go to [Quick Start](#-quick-start) tutorial or watch [video](https://youtu.be/y5Dwakc6hMs).
+To get more detailed information, go to [Quick Start](#-quick-start) tutorial.
 
 ## Contributing
 
@@ -27,8 +27,8 @@ This is a community-maintained fork focused on security and keeping dependencies
 
 [Resources](#resources) \
 [Container properties](#container-properties) \
-[Video Guide](#-video-guide) \
 [Quick Start](#-quick-start) \
+[Automated Deployment with GitHub Actions](#-automated-deployment-with-github-actions) \
 [Persisting configuration](#persisting-configuration) \
 [Alternative way. Run with docker-compose](#alternative-way-run-with-docker-compose) \
 [Other resources](#other-resources)
@@ -109,10 +109,6 @@ After container was run using `docker run` command, it's possible to execute add
 
  **⚠️ Note:** If you generated a new client configuration with custom name e.g `dockovpn exec ./genclient.sh n customname` and then chose to remove this config using `dockovpn exec ./rmclient.sh customname`, the client certificate is revoked permanently in this server, therefore, you cannot create client configuration with the same name again. Doing so will result in error `Sat Oct 28 10:05:17 2023 Client with this id [customname] already exists`.
 
-## 📺 Video Guide
-
-[Watch the video guide on YouTube](https://youtu.be/y5Dwakc6hMs)
-
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -159,6 +155,106 @@ Import `client.ovpn` into your favourite openvpn client. In most cases it should
 You should be able to see your newly added client configuration in the list of available configurations. Click on it, connection process should initiate and be established within few seconds.
 
 Congratulations, now you're all set and can safely browse the internet.
+
+## 🤖 Automated Deployment with GitHub Actions
+
+DockOvpn works exceptionally well as an immutable containerized VPN solution. A practical use case is to deploy it automatically using GitHub Actions, which enables you to:
+
+- **Immutable infrastructure**: Each deployment creates a fresh VPN instance with new credentials
+- **Credential rotation**: Easily rotate credentials by triggering a new deployment
+- **Automated distribution**: Automatically send new client configurations through your preferred method (email, messaging platforms, etc.)
+- **Zero-downtime updates**: Ensure your VPN server always runs the latest security patches
+
+### Example GitHub Actions Workflow
+
+Below is an example workflow that deploys DockOvpn to a self-hosted runner, generates a new client configuration, and sends it via email:
+
+```yaml
+name: Deploy VPN Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-vpn:
+    runs-on: [self-hosted, home]
+
+    steps:
+    - name: Remove existing VPN container
+      run: |
+        if [ "$(docker ps -aq -f ancestor=oriolegea/dockovpn)" ]; then
+          docker rm -f -v $(docker ps -aq -f ancestor=oriolegea/dockovpn)
+        fi
+
+    - name: Remove VPN image
+      run: |
+        if [ "$(docker images -q oriolegea/dockovpn)" ]; then
+          docker rmi -f oriolegea/dockovpn
+        fi
+
+    - name: Run new VPN container
+      run: |
+        docker run --rm -d --cap-add=NET_ADMIN \
+          --device=/dev/net/tun \
+          -p 1194:1194/udp -p 80:8080/tcp \
+          -e HOST_ADDR=your-public-hostname.example.com \
+          --name dockovpn oriolegea/dockovpn:latest
+
+    - name: Wait for configuration generation
+      run: sleep 10
+
+    - name: Download client configuration
+      run: |
+        curl -o client.ovpn http://YOUR_LOCAL_SERVER_IP/
+
+    - name: Install mutt
+      run: sudo apt-get update && sudo apt-get install -y mutt
+
+    - name: Send configuration via email
+      env:
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+        SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      run: |
+        echo "set smtp_url = \"smtp://${{ secrets.SMTP_USERNAME }}:${{ secrets.SMTP_PASSWORD }}@${{ secrets.SMTP_SERVER }}:${{ secrets.SMTP_PORT }}\"" > ~/.muttrc
+        echo "set ssl_starttls=yes" >> ~/.muttrc
+        echo "set ssl_force_tls=yes" >> ~/.muttrc
+        echo "set from = \"${{ secrets.SMTP_USERNAME }}\"" >> ~/.muttrc
+        echo "set realname = \"VPN Service\"" >> ~/.muttrc
+        cat <<EOF > email.html
+        <!DOCTYPE html>
+        <html>
+          <body style="font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px;">
+            <div style="background-color: #fff; padding: 20px; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #0073e6;">VPN Configuration Update</h2>
+              <p>Your VPN configuration has been updated. The attached file contains your new client credentials.</p>
+              <p>Please import the attached <code>client.ovpn</code> file into your OpenVPN client to connect.</p>
+              <p><strong>Note:</strong> Previous credentials are no longer valid.</p>
+            </div>
+          </body>
+        </html>
+        EOF
+        mutt -e "set content_type=text/html" -s "VPN Configuration Updated" -a client.ovpn -- user@example.com < email.html
+```
+
+**Configuration Notes:**
+
+1. Replace `YOUR_LOCAL_SERVER_IP` with the local IP address of your server (e.g., `192.168.1.100`)
+2. Replace `your-public-hostname.example.com` with your server's public hostname or IP
+3. Replace `user@example.com` with the recipient's email address
+4. Configure GitHub secrets for SMTP credentials:
+   - `SMTP_SERVER`: Your SMTP server address
+   - `SMTP_PORT`: SMTP port (usually 587 for TLS)
+   - `SMTP_USERNAME`: Your email username
+   - `SMTP_PASSWORD`: Your email password or app-specific password
+
+**Security Considerations:**
+
+- Sending credentials via email is convenient but may not be suitable for high-security environments
+- Consider using encrypted messaging platforms or secure file sharing services for sensitive deployments
+- Ensure your GitHub repository is private if it contains deployment workflows
+- Use GitHub encrypted secrets for all sensitive credentials
 
 ## Persisting configuration
 
