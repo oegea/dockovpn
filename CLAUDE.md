@@ -132,7 +132,7 @@ OpenVPN server settings (config/server.conf):
 - TLS version minimum: 1.2
 - TLS authentication using ta.key
 - Certificate Revocation List (CRL) verification enabled
-- DNS pushed to clients: OpenDNS (208.67.222.222, 208.67.220.220)
+- DNS pushed to clients: Cloudflare DNS (1.1.1.1)
 
 ### Client Revocation
 
@@ -161,7 +161,7 @@ Docker tags follow specific conventions:
 
 ## Development Notes
 
-- The project uses Alpine Linux 3.14.1 as the base image
+- The project uses Alpine Linux 3.22.2 as the base image
 - OpenVPN and easy-rsa are core dependencies
 - The container requires `--cap-add=NET_ADMIN` capability for TUN device creation and iptables management
 - Host address resolution uses privacy-focused services with fallback: tries Cloudflare's icanhazip.com first, then AWS checkip.amazonaws.com if needed

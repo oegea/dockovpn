@@ -109,6 +109,17 @@ After container was run using `docker run` command, it's possible to execute add
 
  **⚠️ Note:** If you generated a new client configuration with custom name e.g `dockovpn exec ./genclient.sh n customname` and then chose to remove this config using `dockovpn exec ./rmclient.sh customname`, the client certificate is revoked permanently in this server, therefore, you cannot create client configuration with the same name again. Doing so will result in error `Sat Oct 28 10:05:17 2023 Client with this id [customname] already exists`.
 
+## 🔒 Security Features
+
+DockOvpn is configured with modern security standards:
+
+- **Encryption**: AES-256-GCM cipher with SHA512 authentication
+- **TLS**: Minimum TLS 1.2 with TLS authentication enabled
+- **Key Size**: 4096-bit RSA keys for all certificates
+- **DH Parameters**: 4096-bit Diffie-Hellman parameters
+- **Certificate Revocation**: CRL (Certificate Revocation List) support enabled
+- **DNS**: Cloudflare DNS (1.1.1.1) configured for privacy-focused name resolution
+
 ## 🚀 Quick Start
 
 ### Prerequisites
