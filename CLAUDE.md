@@ -47,6 +47,14 @@ make run
 docker-compose up -d
 ```
 
+### Testing
+
+```bash
+# Build the local image and run the end-to-end suite (tests/e2e.sh):
+# UDP/TCP connection, NAT, client commands, revocation, persistence, IPv6 leak protection, flags
+make test
+```
+
 ### Cleanup
 
 ```bash
@@ -62,15 +70,15 @@ The container follows a precise initialization sequence managed by `scripts/star
 
 1. **Option Parsing**: Supports `-r/--regenerate`, `-n/--noop`, `-q/--quit`, `-s/--skip` flags
 2. **TUN Device Setup**: Creates `/dev/net/tun` if not present
-3. **OpenVPN Configuration**: Replaces `%HOST_TUN_PROTOCOL%` placeholder in `/etc/openvpn/server.conf`
-4. **iptables Configuration**: Sets up NAT and forwarding rules for VPN traffic
+3. **OpenVPN Configuration**: Replaces `%HOST_TUN_PROTOCOL%` placeholder in `/etc/openvpn/server.conf`; when `BLOCK_IPV6=true` and IPv6 is enabled in the container, appends `server-ipv6`/`block-ipv6` and pushes `redirect-gateway ipv6` (IPv6 leak protection)
+4. **iptables Configuration**: Sets up NAT and forwarding rules for VPN traffic (also makes sure `net.ipv4.ip_forward` is on)
 5. **PKI Generation** (first run or with `-r`):
    - Initializes PKI and generates DH parameters using easy-rsa
    - Builds CA, server certificate request, and signs server certificate
    - Generates TLS auth key and CRL
    - Creates `.gen` lockfile to prevent re-initialization
 6. **Certificate Deployment**: Copies PKI files to `/etc/openvpn/`
-7. **VPN Server Start**: Launches OpenVPN in background (unless `-n/--noop`)
+7. **VPN Server Start**: Launches OpenVPN in background (unless `-n/--noop`); OpenVPN drops privileges to `nobody` after init and writes runtime state to `/var/lib/openvpn`. The container exits if the OpenVPN process dies.
 8. **Client Config Generation**: On initial run (unless `-s/--skip`), generates first client config via HTTP server
 
 ### Directory Structure
@@ -123,16 +131,23 @@ Configured via Docker `-e` flags:
 - `HOST_TUN_PROTOCOL` - Tunnel protocol `udp` or `tcp` (default: `udp`)
 - `HOST_CONF_PORT` - HTTP port for client config download (default: `80`)
 - `CRL_DAYS` - CRL expiration days (default: `3650`)
+- `BLOCK_IPV6` - IPv6 leak protection, needs IPv6 enabled in the container via `--sysctl net.ipv6.conf.all.disable_ipv6=0` (default: `true`)
+- `EASYRSA_KEY_SIZE` - RSA key size used by easy-rsa for CA/server/client keys and DH (default: `4096`)
 
 ### Security Configuration
 
 OpenVPN server settings (config/server.conf):
 
-- Cipher: AES-256-GCM with SHA512 auth
-- TLS version minimum: 1.2
-- TLS authentication using ta.key
+- Data channel: AEAD only (`data-ciphers AES-256-GCM:CHACHA20-POLY1305`), SHA512 auth; no CBC fallback
+- TLS version minimum: 1.2, TLS 1.2 suites restricted to ECDHE + AEAD (`tls-cipher`)
+- TLS authentication using ta.key (`tls-auth`, key-direction 0 server / 1 client)
+- `remote-cert-tls client` on the server, `remote-cert-tls server` on the client
 - Certificate Revocation List (CRL) verification enabled
-- DNS pushed to clients: Cloudflare DNS (1.1.1.1)
+- `user nobody` / `group nobody`, `persist-tun`; `topology subnet` set explicitly
+- 4096-bit RSA keys for all certificates (`EASYRSA_KEY_SIZE`)
+- DNS pushed to clients: Cloudflare DNS (1.1.1.1, 1.0.0.1)
+- Client ids passed to `genclient.sh`, `rmclient.sh` and `getconfig.sh` are validated (`[A-Za-z0-9][A-Za-z0-9_.@-]{0,63}`)
+- Do not add `reneg-sec 0`: it disables periodic re-keying
 
 ### Client Revocation
 
@@ -161,7 +176,7 @@ Docker tags follow specific conventions:
 
 ## Development Notes
 
-- The project uses Alpine Linux 3.22.2 as the base image
+- The project uses Alpine Linux 3.24.4 as the base image (OpenVPN 2.7, Easy-RSA 3.2); `apk upgrade` runs at build time so the base layer gets security fixes
 - OpenVPN and easy-rsa are core dependencies
 - The container requires `--cap-add=NET_ADMIN` capability for TUN device creation and iptables management
 - Host address resolution uses privacy-focused services with fallback: tries Cloudflare's icanhazip.com first, then AWS checkip.amazonaws.com if needed

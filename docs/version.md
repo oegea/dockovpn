@@ -1,22 +1,28 @@
 # Component versions
 
 ## Base image
-alpine:3.11.3
+alpine:3.24.4
 
 ## OpenVPN
-OpenVPN 2.4.7 x86_64-alpine-linux-musl [SSL (OpenSSL)] [LZO] [LZ4] [EPOLL] [MH/PKTINFO] [AEAD] built on May  5 2019
+OpenVPN 2.7.7 [SSL (OpenSSL 3.5.9)] [LZO] [LZ4] [EPOLL] [PKCS11] [MH/PKTINFO] [AEAD] [DCO]
 
 ## Easy-RSA
-Easy-RSA 3
+Easy-RSA 3.2.5
 
 ## Bash
-bash-5.0
+bash-5.3.9
 
-## Zip
-Zip 3.0 (July 5th 2008)
+## 7-Zip
+7zip 26.01
 
 ## Iptables
-1.8.3
+1.8.13
 
 ## Netcat-OpenBSD
-???
+1.234.1
+
+## curl
+8.23.0
+
+## dumb-init
+1.2.5

@@ -56,11 +56,20 @@ This is a community-maintained fork focused on security and keeping dependencies
 | Variable | Description | Default value |
 | :------: | :---------: | :-----------: |
 | NET_ADAPTER | Network adapter to use on the host machine | eth0 |
-| HOST_ADDR | Host address override if the resolved address doesn't work | localhost |
+| HOST_ADDR | Host address override if the resolved address doesn't work | auto-resolved public IPv4 |
 | HOST_TUN_PORT | Tunnel port to advertise in the client config file | 1194 |
 | HOST_TUN_PROTOCOL | Tunnel protocol (`tcp` or `udp`) | udp |
 | HOST_CONF_PORT | HTTP port on the host machine to download the client config file | 80 |
 | CRL_DAYS | CRL days until expiration, i.e. invalid for revocation checking | 3650 |
+| BLOCK_IPV6 | IPv6 leak protection: route the clients' IPv6 traffic into the tunnel and drop it there, so nothing bypasses the VPN over IPv6. Requires IPv6 to be enabled inside the container (see note below) | true |
+
+**🛡️ IPv6 leak protection:** OpenVPN only redirects IPv4 traffic by default, so a client with IPv6 connectivity would keep sending IPv6 traffic outside the tunnel. When `BLOCK_IPV6=true` (default) the server assigns clients an IPv6 address inside the tunnel, redirects their IPv6 default route into it and answers every IPv6 packet with "unreachable". This needs IPv6 enabled inside the container, which recent Docker versions disable by default. Add the following flag to `docker run` (or the equivalent `sysctls` entry in docker-compose) to enable it:
+
+```bash
+--sysctl net.ipv6.conf.all.disable_ipv6=0
+```
+
+If IPv6 is disabled in the container the server starts anyway and logs a warning. Clients running on hosts with IPv6 completely disabled at OS level can't accept the pushed IPv6 address; either set `BLOCK_IPV6=false` or add `pull-filter ignore "ifconfig-ipv6"` and `pull-filter ignore "route-ipv6"` to their client config.
 
 **⚠️ Note:** In the provided code snippet we advertise the configuration suitable for the most users. We don't recommend setting custom
 NET_ADAPTER and HOST_ADDR unless you absolutely have to. Now host address is resolved automatically when container starts..
@@ -113,12 +122,20 @@ After container was run using `docker run` command, it's possible to execute add
 
 DockOvpn is configured with modern security standards:
 
-- **Encryption**: AES-256-GCM cipher with SHA512 authentication
-- **TLS**: Minimum TLS 1.2 with TLS authentication enabled
-- **Key Size**: 4096-bit RSA keys for all certificates
+- **Up-to-date base**: Alpine Linux 3.24 with OpenVPN 2.7 and Easy-RSA 3.2, all packages upgraded at build time
+- **Data channel**: AEAD ciphers only (AES-256-GCM, ChaCha20-Poly1305), SHA512 HMAC for the control channel
+- **Control channel**: TLS 1.2 minimum restricted to ECDHE + AEAD cipher suites; TLS 1.3 (including post-quantum hybrid key exchange when both ends support it) is negotiated with modern clients
+- **TLS authentication**: HMAC firewall (`tls-auth`) on the control channel
+- **Key Size**: 4096-bit RSA keys for CA, server and client certificates
 - **DH Parameters**: 4096-bit Diffie-Hellman parameters
-- **Certificate Revocation**: CRL (Certificate Revocation List) support enabled
-- **DNS**: Cloudflare DNS (1.1.1.1) configured for privacy-focused name resolution
+- **Certificate Revocation**: CRL (Certificate Revocation List) support enabled, re-read on every connection
+- **Mutual EKU checks**: server requires client certificates to carry the client-authentication EKU and clients require the server-authentication EKU
+- **Least privilege**: OpenVPN drops root privileges and runs as `nobody` after initialization
+- **IPv6 leak protection**: clients' IPv6 traffic is routed into the tunnel and blocked (see `BLOCK_IPV6`)
+- **Client configs**: stored with `0600` permissions; client ids are validated before being used in paths or PKI commands
+- **DNS**: Cloudflare DNS (1.1.1.1 / 1.0.0.1) configured for privacy-focused name resolution
+
+**⚠️ Upgrade note:** the deprecated `AES-256-CBC` data cipher fallback has been removed. All OpenVPN clients released since 2017 (2.4+, OpenVPN Connect, OpenVPN for Android, Passepartout, Tunnelblick) negotiate AES-256-GCM, so existing client configs keep working. Also note that the client config download server (port 8080 in the container) serves the first generated profile over plain HTTP to the first client that connects. Download it as soon as the container starts, or use `-s` and generate profiles with `./genclient.sh` instead.
 
 ## 🚀 Quick Start
 
@@ -283,7 +300,7 @@ To run dockvpn with docker-compose run:
 
 ```bash
 docker-compose up -d && \
-docker-compose exec -d dockovpn wget -O /opt/Dockovpn/client.ovpn localhost:8080
+docker-compose exec -d dockovpn wget -O /opt/Dockovpn_data/client.ovpn localhost:8080
 ```
 
 After run this command you can find your `client.ovpn` inside `openvpn_conf` folder.

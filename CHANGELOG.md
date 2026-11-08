@@ -1,5 +1,20 @@
 # Change log
 
+## Unreleased
+
+- Security: update base image to Alpine 3.24.4 (OpenVPN 2.7.7, Easy-RSA 3.2.5, OpenSSL 3.5.9) and upgrade all base packages at build time; fixes the musl/busybox CVEs present in the 3.22.2 image and picks up the 2026 OpenVPN server fixes
+- Security: OpenVPN now drops root privileges and runs as `nobody` after initialization
+- Security: remove `reneg-sec 0` (it disabled periodic re-keying), remove the `AES-256-CBC` data cipher fallback and the deprecated `cipher` option, restrict TLS 1.2 cipher suites to ECDHE + AEAD, add `remote-cert-tls client` on the server and `auth-nocache` on the client
+- Security: 4096-bit RSA keys are now really used for CA, server and client certificates (previously only the DH parameters were 4096-bit)
+- Security: IPv6 leak protection (`BLOCK_IPV6`, enabled by default when IPv6 is available inside the container)
+- Security: validate client ids before using them in paths and easy-rsa commands; store client configs with `0600` permissions; `rmclient.sh`/`getconfig.sh` fail cleanly on unknown ids
+- Fix: `start.sh` now aborts (instead of writing the `.gen` lockfile) if PKI generation fails, and the container exits if the OpenVPN process dies
+- Fix: `run.sh` mounted the volume on the wrong path
+- Fix: validate `HOST_TUN_PROTOCOL`, make sure `net.ipv4.ip_forward` is enabled, push a secondary DNS server
+- Use `--batch` mode for every easy-rsa call and the new `openvpn --genkey secret` syntax
+- Add end-to-end test suite (`tests/e2e.sh`, `make test`)
+- Update docs (`docs/version.md`, README, CLAUDE.md)
+
 ## v1.14.0
 
 - Add ./listconfigs.sh command

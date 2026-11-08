@@ -3,7 +3,7 @@ export FULL_VERSION="$$(cat ./VERSION)-regen-dh"
 export DOCKER_REPO="oriolegea/dockovpn"
 export CBRANCH=$$(git rev-parse --abbrev-ref HEAD | tr / -)
 
-.PHONY: build build-release build-local build-dev build-test build-branch install clean run
+.PHONY: build build-release build-local build-dev build-test build-branch install clean run test
 
 all: build
 
@@ -48,7 +48,9 @@ clean:
 	@echo "Remove shared volume with configs"
 	docker volume rm Dockovpn_data
 
-# Tests removed - original test container dependency eliminated
+test: build-local
+	@echo "Running end-to-end tests against ${DOCKER_REPO}:local"
+	bash tests/e2e.sh "${DOCKER_REPO}:local"
 
 run:
 	docker run --cap-add=NET_ADMIN \
