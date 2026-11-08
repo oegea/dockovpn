@@ -7,6 +7,8 @@
 - Security: remove `reneg-sec 0` (it disabled periodic re-keying), remove the `AES-256-CBC` data cipher fallback and the deprecated `cipher` option, restrict TLS 1.2 cipher suites to ECDHE + AEAD, add `remote-cert-tls client` on the server and `auth-nocache` on the client
 - Security: 4096-bit RSA keys are now really used for CA, server and client certificates (previously only the DH parameters were 4096-bit)
 - Security: IPv6 leak protection (`BLOCK_IPV6`, enabled by default when IPv6 is available inside the container)
+- Key exchange is now ECDHE only (`dh none`): no Diffie-Hellman parameters are generated at build time or at first start, so nothing is shared between deployments and the image builds in seconds. `-r` now only forces a fresh PKI; the `-regen-dh` tags are no longer produced
+- Images are built multi-arch (linux/amd64 + linux/arm64); `make build`/`make build-dev` use `docker buildx`
 - Security: validate client ids before using them in paths and easy-rsa commands; store client configs with `0600` permissions; `rmclient.sh`/`getconfig.sh` fail cleanly on unknown ids
 - Fix: `start.sh` now aborts (instead of writing the `.gen` lockfile) if PKI generation fails, and the container exits if the OpenVPN process dies
 - Fix: `run.sh` mounted the volume on the wrong path

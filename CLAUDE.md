@@ -11,11 +11,11 @@ DockOvpn is a stateless OpenVPN server Docker container that provides quick, out
 ### Building Docker Images
 
 ```bash
-# Build production version with auto-regenerated DH parameters
-# Uses version from VERSION file with "-regen-dh" suffix
+# Build and push the multi-arch (amd64 + arm64) release image tagged with the
+# version from the VERSION file plus "latest" (needs a buildx docker-container builder)
 make build
 
-# Build manual release version (uses VERSION file as-is)
+# Alias of build
 make build-release
 
 # Build for local testing
@@ -72,8 +72,8 @@ The container follows a precise initialization sequence managed by `scripts/star
 2. **TUN Device Setup**: Creates `/dev/net/tun` if not present
 3. **OpenVPN Configuration**: Replaces `%HOST_TUN_PROTOCOL%` placeholder in `/etc/openvpn/server.conf`; when `BLOCK_IPV6=true` and IPv6 is enabled in the container, appends `server-ipv6`/`block-ipv6` and pushes `redirect-gateway ipv6` (IPv6 leak protection)
 4. **iptables Configuration**: Sets up NAT and forwarding rules for VPN traffic (also makes sure `net.ipv4.ip_forward` is on)
-5. **PKI Generation** (first run or with `-r`):
-   - Initializes PKI and generates DH parameters using easy-rsa
+5. **PKI Generation** (first run; `-r` forces `init-pki` even if a partial PKI exists):
+   - Initializes PKI using easy-rsa (no DH parameters: key exchange is ECDHE only, `dh none`)
    - Builds CA, server certificate request, and signs server certificate
    - Generates TLS auth key and CRL
    - Creates `.gen` lockfile to prevent re-initialization
@@ -85,7 +85,7 @@ The container follows a precise initialization sequence managed by `scripts/star
 
 - `/opt/Dockovpn/` - Application install path (`APP_INSTALL_PATH`)
 - `/opt/Dockovpn_data/` - Persistent data directory (`APP_PERSIST_DIR`)
-  - `pki/` - PKI infrastructure (CA, certificates, DH params)
+  - `pki/` - PKI infrastructure (CA, certificates; a `dh.pem` left by older versions is ignored)
   - `clients/` - Generated client configurations organized by client ID
   - `.gen` - Lockfile indicating PKI initialization complete
 - `/etc/openvpn/` - Runtime OpenVPN configuration and certificates
@@ -132,7 +132,7 @@ Configured via Docker `-e` flags:
 - `HOST_CONF_PORT` - HTTP port for client config download (default: `80`)
 - `CRL_DAYS` - CRL expiration days (default: `3650`)
 - `BLOCK_IPV6` - IPv6 leak protection, needs IPv6 enabled in the container via `--sysctl net.ipv6.conf.all.disable_ipv6=0` (default: `true`)
-- `EASYRSA_KEY_SIZE` - RSA key size used by easy-rsa for CA/server/client keys and DH (default: `4096`)
+- `EASYRSA_KEY_SIZE` - RSA key size used by easy-rsa for CA/server/client keys (default: `4096`)
 
 ### Security Configuration
 
@@ -144,7 +144,7 @@ OpenVPN server settings (config/server.conf):
 - `remote-cert-tls client` on the server, `remote-cert-tls server` on the client
 - Certificate Revocation List (CRL) verification enabled
 - `user nobody` / `group nobody`, `persist-tun`; `topology subnet` set explicitly
-- 4096-bit RSA keys for all certificates (`EASYRSA_KEY_SIZE`)
+- 4096-bit RSA keys for all certificates (`EASYRSA_KEY_SIZE`); `dh none` (ECDHE-only key exchange, no DH parameters anywhere)
 - DNS pushed to clients: Cloudflare DNS (1.1.1.1, 1.0.0.1)
 - Client ids passed to `genclient.sh`, `rmclient.sh` and `getconfig.sh` are validated (`[A-Za-z0-9][A-Za-z0-9_.@-]{0,63}`)
 - Do not add `reneg-sec 0`: it disables periodic re-keying
@@ -169,10 +169,12 @@ Follow the detailed steps in `docs/RELEASE_GUIDELINE.md`:
 
 Docker tags follow specific conventions:
 
-- `latest` - Most recent build (either stable or regen-dh)
+- `latest` - Most recent build
 - `vX.Y.Z` - Fixed release version
-- `vX.Y.Z-regen-dh` - Hourly regenerated with fresh DH parameters for enhanced security
+- `vX.Y.Z-regen-dh` - Legacy tags from the time DH parameters were embedded in the image; no longer produced
 - `dev` - Latest development build from master branch
+
+Images are built multi-arch (linux/amd64 + linux/arm64) with `docker buildx` (`make build`, `make build-dev`).
 
 ## Development Notes
 

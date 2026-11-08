@@ -114,17 +114,13 @@ cd "$APP_PERSIST_DIR"
 
 LOCKFILE=.gen
 
-# Regenerate certs only on the first start
+# Generate the PKI only on the first start
 if [ ! -f $LOCKFILE ]; then
     IS_INITIAL="1"
-    test -d pki || REGENERATE="1"
-    if [[ -n $REGENERATE ]]; then
-        echo "$(datef) Generating PKI and DH parameters, this may take a while..."
+    echo "$(datef) Generating PKI (CA, server certificate, tls-auth key)..."
+    # -r forces a fresh PKI even if a partial one exists (e.g. an interrupted first start)
+    if [[ -n $REGENERATE || ! -d pki ]]; then
         easyrsa --batch init-pki
-        easyrsa --batch gen-dh
-        # DH parameters created at /opt/Dockovpn_data/pki/dh.pem
-        # Copy DH file
-        cp pki/dh.pem /etc/openvpn
     fi
 
     easyrsa --batch build-ca nopass
@@ -148,8 +144,9 @@ if [ ! -f $LOCKFILE ]; then
     touch $LOCKFILE
 fi
 
-# Copy server keys and certificates
-cp pki/dh.pem pki/ca.crt pki/issued/MyReq.crt pki/private/MyReq.key pki/crl.pem ta.key /etc/openvpn
+# Copy server keys and certificates (dh.pem from volumes created by older
+# versions is ignored: key exchange is ECDHE only)
+cp pki/ca.crt pki/issued/MyReq.crt pki/private/MyReq.key pki/crl.pem ta.key /etc/openvpn
 chmod 600 /etc/openvpn/MyReq.key /etc/openvpn/ta.key
 # The CRL is re-read on every client connection after OpenVPN dropped privileges
 chmod 644 /etc/openvpn/crl.pem

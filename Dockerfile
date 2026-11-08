@@ -18,31 +18,27 @@ ENV CRL_DAYS=3650
 # (requires IPv6 to be enabled inside the container, otherwise it's skipped)
 ENV BLOCK_IPV6=true
 
-# Use 4096-bit RSA keys for CA, server and client certificates (not only for DH)
+# Use 4096-bit RSA keys for CA, server and client certificates
 ENV EASYRSA_KEY_SIZE=4096
 
 WORKDIR ${APP_INSTALL_PATH}
+
+# Upgrade base packages (base image layer may lag behind the repo) and install deps.
+# This layer doesn't depend on the sources, so it stays cached between script changes.
+RUN apk upgrade --no-cache && \
+    apk add --no-cache openvpn easy-rsa bash netcat-openbsd 7zip curl dumb-init iptables && \
+    ln -s /usr/share/easy-rsa/easyrsa /usr/bin/easyrsa && \
+    mkdir -p ${APP_PERSIST_DIR} /var/lib/openvpn
 
 COPY scripts .
 COPY config ./config
 COPY VERSION ./config
 
-# Upgrade base packages (base image layer may lag behind the repo) and install deps
-RUN apk upgrade --no-cache && \
-    apk add --no-cache openvpn easy-rsa bash netcat-openbsd 7zip curl dumb-init iptables && \
-    ln -s /usr/share/easy-rsa/easyrsa /usr/bin/easyrsa && \
-    mkdir -p ${APP_PERSIST_DIR} /var/lib/openvpn && \
-    cd ${APP_PERSIST_DIR} && \
-    easyrsa init-pki && \
-    easyrsa gen-dh && \
-    # DH parameters of size 4096 created at /opt/Dockovpn_data/pki/dh.pem
-    # Copy DH file
-    cp pki/dh.pem /etc/openvpn && \
-    # Copy FROM ./config/server.conf TO /etc/openvpn/server.conf
-    cd ${APP_INSTALL_PATH} && \
-    cp config/server.conf /etc/openvpn/server.conf && \
+# The PKI (CA, server cert, tls-auth key) is generated at first start into
+# ${APP_PERSIST_DIR}. Key exchange is ECDHE only (dh none), so no DH parameters
+# are needed.
+RUN cp config/server.conf /etc/openvpn/server.conf && \
     chmod +x *.sh
-
 
 EXPOSE 1194/${HOST_TUN_PROTOCOL}
 EXPOSE 8080/tcp

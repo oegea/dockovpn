@@ -46,9 +46,9 @@ This is a community-maintained fork focused on security and keeping dependencies
 
 | Tag    | Description |
 | :----: | :---------: |
-| `latest` | This tag is added to every newly built version be that `v#.#.#` or `v#.#.#-regen-dh` |
+| `latest` | This tag is added to every newly built release version (`v#.#.#`) |
 | `v#.#.#` | Standard fixed release version, where {1} is _major version_, {2} - _minor_ and {3} is a _patch_. For instance, `v1.1.0` |
-| `v#.#.#-regen-dh` | Release version with newly generated Deffie Hellman security file. In order to keep security high this version is generated every hour. Tag example - `v1.1.0-regen-dh` |
+| `v#.#.#-regen-dh` | Legacy tag. Older releases embedded Diffie-Hellman parameters in the image and regenerated them hourly. Key exchange is now ECDHE only, so these tags are no longer produced |
 | `dev` | Development build which contains the most recent changes from the active development branch (master) |
 
 ### Environment variables
@@ -91,18 +91,12 @@ docker run -it --rm --cap-add=NET_ADMIN \
 
 | Short name | Long name | Description |
 | :-: | :---: | :-----: |
-| `-r` | `--regenerate` | Regenerates PKI and DH file |
+| `-r` | `--regenerate` | Forces a fresh PKI on first start even if a partial one exists in the volume. The PKI is always generated at first start, so this is rarely needed |
 | `-n` | `--noop` | Initialise container, but don's start VPN server |
 | `-q` | `--quit` | Quit after container was initialized |
 | `-s` | `--skip` | Skip client generation on first start |
 
-**⚠️ Note:** We strongly recommend always run your container with `-r` option, even though it will take container a bit longer to start. In future releases we will apply this option by default:
-
-```bash
-docker run -it --rm --cap-add=NET_ADMIN \
--p 1194:1194/udp -p 80:8080/tcp \
---name dockovpn oriolegea/dockovpn -r
-```
+**ℹ️ Note:** Every container generates its own CA, server certificate and `tls-auth` key on first start, so nothing cryptographic is shared between deployments of the same image.
 
 ### Container commands
 
@@ -127,7 +121,7 @@ DockOvpn is configured with modern security standards:
 - **Control channel**: TLS 1.2 minimum restricted to ECDHE + AEAD cipher suites; TLS 1.3 (including post-quantum hybrid key exchange when both ends support it) is negotiated with modern clients
 - **TLS authentication**: HMAC firewall (`tls-auth`) on the control channel
 - **Key Size**: 4096-bit RSA keys for CA, server and client certificates
-- **DH Parameters**: 4096-bit Diffie-Hellman parameters
+- **Key exchange**: ECDHE only (`dh none`). No finite-field Diffie-Hellman parameters are generated or shared between deployments, and the image builds in seconds
 - **Certificate Revocation**: CRL (Certificate Revocation List) support enabled, re-read on every connection
 - **Mutual EKU checks**: server requires client certificates to carry the client-authentication EKU and clients require the server-authentication EKU
 - **Least privilege**: OpenVPN drops root privileges and runs as `nobody` after initialization

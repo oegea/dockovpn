@@ -1,5 +1,4 @@
 export FULL_VERSION_RELEASE="$$(cat ./VERSION)"
-export FULL_VERSION="$$(cat ./VERSION)-regen-dh"
 export DOCKER_REPO="oriolegea/dockovpn"
 export CBRANCH=$$(git rev-parse --abbrev-ref HEAD | tr / -)
 
@@ -7,18 +6,15 @@ export CBRANCH=$$(git rev-parse --abbrev-ref HEAD | tr / -)
 
 all: build
 
+# Multi-arch (amd64 + arm64) release build pushed to Docker Hub.
+# Requires a buildx builder with the docker-container driver, e.g.:
+#   docker buildx create --name multiarch --use
 build:
-	@echo "Making production version ${FULL_VERSION} of DockOvpn"
-	docker build -t "${DOCKER_REPO}:${FULL_VERSION}" -t "${DOCKER_REPO}:latest" . --no-cache
-	docker push "${DOCKER_REPO}:${FULL_VERSION}"
-	docker push "${DOCKER_REPO}:latest"
+	@echo "Making production version ${FULL_VERSION_RELEASE} of DockOvpn"
+	docker buildx build --platform linux/amd64,linux/arm64 --no-cache --push \
+		-t "${DOCKER_REPO}:${FULL_VERSION_RELEASE}" -t "${DOCKER_REPO}:latest" .
 
-build-release:
-	@echo "Making manual release version ${FULL_VERSION_RELEASE} of DockOvpn"
-	docker build -t "${DOCKER_REPO}:${FULL_VERSION_RELEASE}" -t ${FULL_VERSION} -t ${DOCKER_REPO}:latest . --no-cache
-	docker push "${DOCKER_REPO}:${FULL_VERSION_RELEASE}"
-	docker push "${DOCKER_REPO}:latest"
-	# Note: This is by design that we don't push ${FULL_VERSION} to repo
+build-release: build
 
 build-local:
 	@echo "Making version of DockOvpn for testing on local machine"
@@ -26,8 +22,7 @@ build-local:
 
 build-dev:
 	@echo "Making development version of DockOvpn"
-	docker build -t "${DOCKER_REPO}:dev" . --no-cache
-	docker push "${DOCKER_REPO}:dev"
+	docker buildx build --platform linux/amd64,linux/arm64 --no-cache --push -t "${DOCKER_REPO}:dev" .
 
 build-test:
 	@echo "Making testing version of DockOvpn"
@@ -42,7 +37,7 @@ publish-branch: build-branch
 	docker push "${DOCKER_REPO}:${CBRANCH}"
 
 install:
-	@echo "Installing DockOvpn ${FULL_VERSION}"
+	@echo "Installing DockOvpn ${FULL_VERSION_RELEASE}"
 
 clean:
 	@echo "Remove shared volume with configs"
